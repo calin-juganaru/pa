@@ -1,0 +1,166 @@
+
+@Problema 1:
+
+        Strategia pentru acest joc este una simplă: jucătorul aflat la mutarea curentă trebuie să
+    extragă din șir cel mai mare număr. Pentru a nu căuta la fiecare pas elementul maxim în O(N),
+    sortăm întâi șirul citit, apoi fiecare jucător va extrage doar elementul de pe prima sau ultima
+    poziție (în funcție de ordinea sortării - în cazul nostru, crescătoare, deci ultimul). Funcția
+    sort() din biblioteca standard C++ este o variantă de quick_sort și are complexitatea temporală
+    de O(N*log(N)), iar extragerea elementelor va avea O(N), deci complexitatea finală a soluției
+    este de O(N*log(N)).
+
+---------------------------------------------------------------------------------------------------
+
+@Problema 2:
+
+        Față de prima problemă, pe care am rezolvat-o printr-un algoritm greedy, aici este nevoie
+    de metoda programării dinamice. Întâi, vom privi problema invers: nu căutăm K numere pe care
+    să le eliminăm din șir, astfel încât Tuzgu să obțină în final scorul maxim, ci alegem N - K
+    numere din cele N, care să-i maximizeze mai apoi scorul.
+        Dacă definim score[i][j] ca "cel mai bun scor pe care îl poate obține Tuzgu alegând i
+    numere din primele j din șir, cu care să aplice strategia de la prima problemă", atunci
+    score[N - K][N] va fi soluția căutată.
+        Primele două cazuri trebuie tratate separat:
+            score[1][j]: cel mai bun scor pe care îl poate obține Tuzgu alegând un singur
+                            element este chiar acel element;
+            score[2][j]: în cazul a două elemente, aplicând strategia de la prima problemă,
+                            soluția este diferența lor (Tuzgu îl va alege pe cel mai mare).
+
+        Pentru celelate cazuri vom deduce o formulă de recurență. La fiecare pas, Tuzgu, încearcă
+    să-și maximizeze scorul. Considerând că începem numerotarea rundelor de la 1, la rundele impare
+    va extrage Tuzgu și va alege un element care îi oferă o diferență între scoruri cât mai mare,
+    iar la cele pare va extrage Ritza și vom încerca să-i minimizăm pierderile lui Tuzgu, ceea ce
+    înseamnă, de fapt, tot maximizarea aceleiași diferențe între scoruri. Pentru a alege i numere
+    din primele j avem două opțiuni: am ales deja i numere din primele j - 1 și nu-l mai luăm și
+    pe cel curent, sau am ales i - 1 elemente din primele j - 1 și-l vom extrage pe cel curent.
+
+        Deducem că:
+
+            score[i][j] = max(score[i][j - 1],
+                              score[i - 1][j - 1] +- v[j]),
+            unde v[] este șirul primit la intrare și sortat descrescător,
+            iar acel '+-' depinde de (im)paritatea indicelui i.
+
+        Sortarea inițială, folosind aceeași funcție, va avea complexitatea temporală de
+    O(N*log(N)), parcurgerea și calcularea matricii score[][] vor avea O((N - K) * N), deci
+    O(N^2), obținând în final O(N^2). Complexitatea de spațiu, în special pentru matricea
+    score[][], poate fi redusă semnificativ, pornind de la următoarea observație: la fiecare
+    pas folosim în calcule doar elemente de pe linia curentă și cea precedentă, deci sunt
+    suficiente numai două linii în matrice, dacă facem o comutare între ele la fiecare
+    iterație în bucla pentru i. Aceasta poate fi realizată alocând o matrice de 2 x N, și
+    folosind indicele liniei modulo 2. Astfel, am redus complexitatea spațială de la O(N^2)
+    la O(N).
+
+---------------------------------------------------------------------------------------------------
+
+@Problema 3:
+
+        Spre deosebire de primele două probleme, aici nu mai putem sorta numerele, ci trebuie
+    luate în ordinea primită. Totuși, vom aplica un raționament de programare dinamică asemănător
+    cu cel de la a doua problemă, definind score[i][j] ca "cel mai bun scor pe care îl poate
+    obține Tuzgu din elementele de la i la j (inclusiv), extragând la fiecare pas doar elementele
+    din capetele (sub)șirului".
+        La fiecare mutare a lui Tuzgu există patru posibilități (pentru subșirul curent (i, j)):
+            1) Tuzgu alege numărul din stânga (v[i]), iar Ritza tot pe cel din stânga (v[i + 1])
+            2) Tuzgu alege numărul din stânga (v[i]), iar Ritza pe cel din dreapta (v[j])
+            3) Tuzgu alege numărul din dreapta (v[j]), iar Ritza pe cel din stânga (v[i])
+            4) Tuzgu alege numărul din dreapta (v[j]), iar Ritza tot pe cel din dreapta (v[j - 1])
+
+        Pentru a calcula, conform definiției, matricea score[][], sunt necesare mai multe operații,
+    iar formula devine complicată. Mult mai simplu va fi să calculăm la fiecare pas suma maximă pe
+    care o poate obține Tuzgu în aceleași condiții, și să deducem scorul său numai la final, prin
+    scădere din suma tuturor elementelor. Astfel, definim recurența noii matrici:
+
+            max_sum[i][j] = max(v[i] + min(max_sum[i + 2][j], max_sum[i + 1][j - 1]),
+                                v[j] + min(max_sum[i + 1][j - 1], max_sum[i][j - 2])).
+
+        Cele patru cazuri de mai sus apar în aceeași ordine în formulă, iar matricea max_sum[][]
+    va fi parcursă întai după lungimea intervalului (subșirului) pe care căutăm soluții mai mici,
+    încercănd să-i maximizăm suma totală a lui Tuzgu (prin max()), dar respectând condiția ca Ritza
+    să joace la fel optim ca el (deci alegem minimul dintre strategiile lui Tuzgu pe intervalele
+    mai mici), apoi deplasăm cu o poziție la dreapta intervalul și continuăm calculele. La final,
+    vom ști suma maximă pe care o poate forma Tuzgu jucând cu Ritza pe tot șirul, T. Considerând
+    S ca fiind suma tuturor numerelor din șirul dat, și R, suma obținută de Ritza, este clar că
+    S = T + R  ==>  R = S - T  ==>  T - R = 2*T - S, adică soluția căutată.
+
+        Complexitatea temporală pentru dinamică este de O(N^2), iar aici nu mai folosim nicio
+    sortare a șirului. Pe de altă parte, complexitatea spațială este tot de O(N^2) (pentru matricea
+    max_sum[][]), dar dimensiunea sa poate fi redusă de la N x N la 3 x N, prin același mod ca la
+    problema 2, deci obținem complexitatea de spațiu O(N).
+
+---------------------------------------------------------------------------------------------------
+
+@Problema 4:
+
+        Vom modela această problemă cu ajutorul intervalelor disjuncte. Trebuie să găsim toate
+    combinațiile posibile de N numere naturale distincte din intervalul [1, V] astfel încât,
+    aplicând strategia de la prima problemă, rezultatul să fie K. Cum diferența a două sume cu
+    același număr de termeni este egală cu suma diferențelor termenilor cu același indice (iar,
+    în cazul în care prima sumă are un termen în plus, adăugăm acel termen la rezultatul final),
+    deducem că trebuie să găsim acele N numere (pe care le considerăm ordonate) cu proprietarea
+    că suma diferențelor perechilor (nu a oricăror două numere consecutive, ci a perechilor
+    (v[2 * i], v[2 * i + 1]), cu i de la 0 la N / 2 - 1) trebuie să fie K.
+        Considerăm un șir v[] ce respectă condițiile de mai sus: v[0], v[1], ..., v[N - 1]. Acesta
+    va trebui să fie ordonat: dacă este descrescător vom face diferențele între termenul cu indice
+    mai mare și cel cu indice mai mic, iar dacă este crescător, invers, deoarece ne interesează
+    diferențele în modul. Orice element din v[] se află în intervalul [1, V], iar suma diferențelor
+    perechilor consecutive va fi K. Vom spune că orice astfel de pereche va forma un interval, și,
+    cum numerele sunt distincte, intervalele vor fi disjuncte. Între oricare două intervale
+    disjuncte consecutive va exista un alt interval, pe care îl vom numi spațiu. Suma lungimilor
+    intervalelor am stabilit că este K, iar suma lungimilor spațiilor va fi obținută scazând din
+    lungimea întregului interval [1, V] suma lungimilor intervalelor, deci V - K.
+
+        Observăm patru cazuri de 'așezare' a acestor intervale și spații:
+            1) primul este spațiu, iar ultimul este interval   (1 ... v[0], v[1] ... v[N - 2], v[N - 1])
+            2) primul este interval, iar ultimul este spațiu   (v[0], v[1] ... v[N - 2], v[N - 1] ... V)
+            3) primul este interval, iar ultimul este interval (v[0], v[1] ... v[N - 2], v[N - 1])
+            4) primul este spațiu, iar ultimul este tot spațiu (1 ... v[0], v[1] ... v[N - 2], v[N - 1] ... V)
+
+        Pentru aceste cazuri, considerând momentan N ca fiind par, deducem și numărul de spații
+    (numărul de intervale este mereu N / 2, pe care îl vom nota M):
+            1 & 2) sunt cazuri 'în oglindă' și vor avea M spații
+            3) față de primele două cazuri, nu mai există acel spațiu de început sau sfârșit,
+                deci vor fi M - 1
+            4) față de primele două cazuri, există spațiu și la început, și la sfârșit, deci M + 1
+
+        Când N este impar, vor exista M = (N - 1) / 2 intervale și încă un număr. Pentru a modela
+    acest caz ca pe cel cu N par, adăugam un 0 la început și incrementăm V, astfel încât M devine
+    (N + 1) / 2 (par), și ultimul număr 'x' va forma singur un interval de lungime x.
+
+        Ne rămâne să gasim toate combinațiile posibile de aceste numere, respectând restricțiile de
+    mai sus. Definim, ca în program:
+            ranges = toate modurile în care putem putem plasa intervalele disjuncte;
+            spaces = toate modurile în care putem plasa spațiile libere dintre acestea.
+
+        Deducem că soluția căutată, pentru fiecare caz în parte, va fi ranges * spaces. Fiecare
+    interval și spațiu este caracterizat de lungimea sa, iar sumele acestor lungimi sunt cunoscute
+    și constante, deci căutam numărul total de moduri de a așeza M intervale cu suma totală a
+    lungimilor K, adică combinări de K - 1 luate câte M - 1. Notăm L = V - K, suma lungimilor
+    spațiilor, deci numărul de aranjări posibile ale spațiilor va fi, după caz:
+            1 & 2) combinări de L - 1 luate câte M - 1
+            3) combinări de L - 1 luate câte M - 2
+            4) combinări de L - 1 luate câte M
+
+        Observație: în cazul cu N impar, după crearea noului interval, garantat, orice configurație
+    va începe cu un interval (în partea în care se află elementul cel mai mic, conform ordonării),
+    deci în cazurile 1 și 4 vor fi 0 posibilități.
+        Rezultatul final va fi egal cu suma tuturor posibilităților pe cazuri înmulțită cu N!,
+    pentru a permuta toate cele N numere codificate prin intervale și spații, generând, astfel,
+    toate configurațiile posibile. Cum numerele cu care lucrăm pot fi foarte mari, vom efectua
+    toate operațiile % mod.
+
+        Optimizări:
+            - pentru că lucrăm cu combinatorică avem de-a face cu calcularea factorialului, dar,
+                fiindcă orice calcul va fi efectuat % mod, ne folosim de teorema inversului modular
+                a lui Euler și primalitatea numărului mod = 1'000'000'007, prin care obținem mult
+                mai eficient 1 / N! % mod, și ridicarea la putere o vom calcula în timp logaritmic:
+                    1 / N! % mod  = euler(N!) = N ^ (mod - 2);
+            - funcțiile foarte scurte (mai ales cele care au doar return) pot fi implementate ca
+                funcții lambda pentru optimizare, inlining și deducere automată a tipurilor.
+
+        Analiza complexitățăii: cele mai costisitoare operații reprezintă calcularea combinărilor,
+    și mai exact, ridicarea la putere, care este efectuată în timp logaritmic, precum și calcularea
+    factorialului, care este tot în timp logaritmic. Cum numărul de operații principale (calcularea
+    combinărilor, adunările, înmulțirile, însumarea cazurilor și rezultatul final) este constant,
+    complexitatea de tip a algoritmului este O(log(N)) (de la funcția de ridicare la putere), iar
+    cea temporală este constantă (doar câteva variabile și un array de 4 numere).

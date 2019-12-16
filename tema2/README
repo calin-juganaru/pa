@@ -1,0 +1,54 @@
+
+	@Problema 1:
+		Dat fiind vectorul de distanțe putem reconstrui un graf, care parcus în lățime, ar genera
+	acest vector, creând un arbore (nu este unic) al BFS-ului, pe baza următoarelor observații:
+		- Nodul 1, cu distanța 0, va fi rădăcină.
+		- Sortăm vectorul de distanțe crescător, în funcție de distanță, apoi după indice, în caz
+		de egalitate.
+		- Pentru fiecare distanță nenulă reținem indicele primei apariții în vectorul de distanțe
+		sortat,	de la stânga la dreapta.
+		- Orice nod cu distanța nenulă D va fi atașat printr-o muchie la primul nod găsit în vector
+		cu distanța D - 1.
+		- Dacă există un nod cu indicele diferit de 1, care să aibă distanța 0, problema nu are
+		soluție pe aceste date de intrare.
+		- Dacă există o discontinuitate în intervalul de valori ale distanțelor (adică există un x,
+		astfel încât dist = [0...D, D + x...Dmax], x > 1), problema nu are soluție.
+
+	@Problema 2:
+		Pentru a găsi o zonă de căsuțe conectate am folosit algoritmul lui Lee, sau parcurgerea în
+	lățime într-o matrice. Pentru a fi eficientă căutarea tuturor zonelor, pornim din fiecare
+	celulă, dar având stabilite valorile elementului minim din zona curentă, pe care o alegem ca
+	valoarea din celula de start, și a elementului maxim, adică prima valoare + K. Când ajungem
+	într-o celulă în cursul parcurgerii, verificăm ca valoarea acesteia să nu depășească valorile
+	minimă și maximă stabilite, pentru a respecta condiția din enunț a unei zone valide.
+		Dacă valoarea curentă este egală cu cea minimă, o vom marca într-o matrice ca fiind
+	vizitată cu valoarea momentului curent. Definim momentul curent ca fiind numărul de ordine al
+	apelului funcției lee(). Pentru a nu parcurge la infinit, marcăm în această matrice orice
+	căsuță vizitată, având o valoare mai mare decât cea minimă, cu -momentul_curent. Folosirea
+	valorii momentului ne ajută atunci când după ce o zonă (cu minimul și maximul stabilite) a
+	fost descoperită, pornirea unei parcurgeri din oricare celulă aparținând acestei zone și
+	având valoarea minimă va duce la găsirea aceleaiași zone, deci este inutilă. Astfel, vom
+	porni o parcurgere dintr-o celulă numai dacă aceasta nu a mai fost vizitată sau a fost
+	vizitată, dar nu era egală cu valoarea minimă stabilită în acea parcurgere. După fiecare
+	apel al funcției, verificăm dacă am găsit o zonă mai mare decât până acum și actualizăm.
+
+	@Problema 3:
+		Folosim algoritmul lui Dijkstra cu heap, dar modificat, pentru a găsit drumul minim de la
+	primul nod la ultimul, luând în calcul și penalizările. Reținem într-o matrice penalty[i][j]
+	valoarea penalizării pentru folosirea unei muchii de tip i, apoi a uneia de tip j, și, pentru
+	fiecare nod, tipul ultimei muchii folosite în distanța minimă găsită până la acel nod (vectorul
+	last_type[]). Astfel, când ajungem la nodul Y, vecin al nodului X, extras din heap, vom încerca
+	relaxarea folosind:
+		distanța minimă până la X + costul muchiei (X, Y)
+			+ penalizarea folosirii muchiei cu care am ajuns în X și a muchiei (X, Y).
+		După actualizarea unei distanțe minime, reținem tipul muchiei cu care am ajuns în acel nod.
+
+	@Problema 4:
+		Asemănător cu problema 3, am folosit algoritmul lui DIjkstra optimizat cu heap, dar
+	modificat altfel, deoarece nu ne mai interesează decât penalizarea pentru folosirea muchiei
+	curente, deci, la relaxare vom avea două cazuri:
+		1) Până la nodul curent a fost deja folosită o muchie cu acest tip (și aplicată
+		penalizarea), deci actualizăm distanța minimă exact ca în algoritmul lui Dijkstra.
+		2) Nu a mai fost folosită o astfel de muchie, deci trebuie luată în calcul penalizarea
+		ei la relaxare, ca la problema 3, și folosit câte un vector de bool pentru fiecare nod
+		care să rețină ce tipuri au fost folosite în distanța minimă găsită până la acesta.
